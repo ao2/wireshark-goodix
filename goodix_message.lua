@@ -244,21 +244,20 @@ function protocol.dissector(buffer, pinfo, tree)
 
    local subtree = tree:add(protocol, buffer(), "Goodix Message Protocol")
 
-   body_buf = buffer(3, buffer:len()-4):tvb()
-
    subtree:add_le(cmd0_field, buffer(0,1))
    subtree:add_le(cmd1_field, buffer(0,1))
    subtree:add_le(cmd_continuation, buffer(0,1))
    subtree:add_le(len, buffer(1,2)):append_text(" bytes (including checksum)")
    subtree:add_le(cksum, buffer(buffer:len()-1,1))
 
-   from_host = pinfo.src == Address.ip("1.1.1.1") or tostring(pinfo.src) == "host"
-
-
-   local cmd_subtree = subtree:add(protocol, body_buf())
-
    cmd_val = buffer(0, 1):le_uint()
    cmd0_val, cmd1_val = extract_cmd0_cmd1(cmd_val)
+
+   body_buf = buffer(3, buffer:len()-4):tvb()
+
+   from_host = pinfo.src == Address.ip("1.1.1.1") or tostring(pinfo.src) == "host"
+
+   local cmd_subtree = subtree:add(protocol, body_buf())
 
    if from_host then
       summary = "Command: " .. get_cmd_name(cmd_val)
