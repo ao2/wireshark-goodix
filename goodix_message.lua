@@ -2,7 +2,7 @@ protocol = Proto("goodix",  "Goodix Fingerprint Sensor Message Protocol")
 
 cmd0_field = ProtoField.uint8("goodix.cmd0", "cmd0", base.HEX, nil, 0xF0)
 cmd1_field = ProtoField.uint8("goodix.cmd1", "cmd1", base.HEX, nil, 0x0E)
-cmd_lsb = ProtoField.bool("goodix.cmd_lsb", "cmd LSB", 8, nil, 0x01) -- Always false afaik, but dissecting just in case.
+cmd_continuation = ProtoField.bool("goodix.cmd_continuation", "Continuation flag", 8, nil, 0x01)
 len = ProtoField.uint16("goodix.len", "Length", base.DEC)
 cksum = ProtoField.uint8("goodix.cksum", "Checksum", base.HEX)
 
@@ -38,7 +38,7 @@ config_sensor_chip = ProtoField.uint8("goodix.config_sensor_chip", "Sensor Chip"
 }, 0xF0)
 
 protocol.fields = {
-   cmd0_field, cmd1_field, cmd_lsb, len, cksum,
+   cmd0_field, cmd1_field, cmd_continuation, len, cksum,
    ack_cmd, ack_true, ack_bool,
    firmware_version,
    enabled,
@@ -248,7 +248,7 @@ function protocol.dissector(buffer, pinfo, tree)
 
    subtree:add_le(cmd0_field, buffer(0,1))
    subtree:add_le(cmd1_field, buffer(0,1))
-   subtree:add_le(cmd_lsb, buffer(0,1))
+   subtree:add_le(cmd_continuation, buffer(0,1))
    subtree:add_le(len, buffer(1,2)):append_text(" bytes (including checksum)")
    subtree:add_le(cksum, buffer(buffer:len()-1,1))
 
