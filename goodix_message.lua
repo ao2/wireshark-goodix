@@ -215,11 +215,20 @@ commands = {
          end,
       },
       [1] = {
-         name = "Resend Image data?",
+         name = "Some TLS-like Handshake?",
          dissect_command = function(tree, buf)
-            -- Seemingly gives the same response over TLS as sending Ima.0 does,
-            -- but without reading a new image from the sensor. Not seen used,
-            -- untested.
+            -- Seemingly some TLS-like handshake, untested.
+            tree:add_le(body, buf(0, 4)):append_text("handshake type?")
+            tree:add_le(body, buf(4, 4)):append_text("handshake data len?")
+            local data_len = buf(4, 4):le_uint() - 8
+            tree:add_le(body, buf(8, data_len)):append_text("handshake data?")
+         end,
+         dissect_reply = function(tree, buf)
+            -- > SAME structure?
+            tree:add_le(body, buf(0, 4)):append_text("handshake type?")
+            tree:add_le(body, buf(4, 4)):append_text("handshake data len?")
+            local data_len = buf(4, 4):le_uint() - 8
+            tree:add_le(body, buf(8, data_len)):append_text("handshake data?")
          end,
       },
       [2] = {
