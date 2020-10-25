@@ -6,6 +6,8 @@ cmd_continuation = ProtoField.bool("goodix.cmd_continuation", "Continuation flag
 len = ProtoField.uint16("goodix.len", "Length", base.DEC)
 cksum = ProtoField.uint8("goodix.cksum", "Checksum", base.HEX)
 
+body = ProtoField.none("goodix.body", "body")
+
 ack_bool = ProtoField.bool("goodix.ack_bool", "Unknown bool", 2, nil, 0x02)
 ack_true = ProtoField.bool("goodix.ack_true", "Always true", 2, nil, 0x01)
 ack_cmd = ProtoField.uint8("goodix.ack_cmd", "ACKed Command", base.HEX)
@@ -38,7 +40,7 @@ config_sensor_chip = ProtoField.uint8("goodix.config_sensor_chip", "Sensor Chip"
 }, 0xF0)
 
 protocol.fields = {
-   cmd0_field, cmd1_field, cmd_continuation, len, cksum,
+   cmd0_field, cmd1_field, cmd_continuation, len, cksum, body,
    ack_cmd, ack_true, ack_bool,
    firmware_version,
    enabled,
@@ -247,13 +249,39 @@ function protocol.dissector(buffer, pinfo, tree)
    subtree:add_le(cmd0_field, buffer(0,1))
    subtree:add_le(cmd1_field, buffer(0,1))
    subtree:add_le(cmd_continuation, buffer(0,1))
-   subtree:add_le(len, buffer(1,2)):append_text(" bytes (including checksum)")
-   subtree:add_le(cksum, buffer(buffer:len()-1,1))
 
    cmd_val = buffer(0, 1):le_uint()
    cmd0_val, cmd1_val = extract_cmd0_cmd1(cmd_val)
 
-   body_buf = buffer(3, buffer:len()-4):tvb()
+   -- continuation packets (in v1 devices) do not have the same structure as
+   -- normal packets:
+   --
+   -- 1. they do not have a len field, their size is fixed;
+   -- 2. the len field in the first non-continuation packet referred to the
+   --    size of the actual data after it has been reassembled;
+   -- 3. the checksum is only at the end of the last continuation packet.
+   --    To find the checksum some inter-packet state must be kept...
+   if bit.band(cmd_val, 0x1) == 1 then
+      subtree:add_le(body, buffer(1,length - 1)):append_text(" data of a chunked message")
+      return
+   end
+
+   subtree:add_le(len, buffer(1,2)):append_text(" payload bytes (including checksum)")
+
+   -- leave out the checksum when parsing the actual body
+   local body_len = buffer(1,2):le_uint() - 1
+
+   -- if the body_len is greater than the packet buffer size, this is the
+   -- first packet of a chunked message, and does not contain the checksum
+   if body_len > length - 3 then
+      body_len = length - 3
+      -- TODO keep some inter-packet state here, like "chunked_payload_len"?
+   else
+      -- skip command (1 byte) and (2 bytes), and body to get to the actual checksum
+      subtree:add_le(cksum, buffer(3 + body_len,1))
+   end
+
+   body_buf = buffer(3, body_len):tvb()
 
    from_host = pinfo.src == Address.ip("1.1.1.1") or tostring(pinfo.src) == "host"
 
