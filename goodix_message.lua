@@ -22,14 +22,14 @@ reset_flag_sensor = ProtoField.bool("goodix.reset_flag.sensor", "Reset Sensor", 
 reset_flag_mcu = ProtoField.bool("goodix.reset_flag.mcu", "Soft Reset MCU", 8, nil, 0x02)
 reset_flag_sensor_copy = ProtoField.bool("goodix.reset_flag.sensor_copy", "Reset Sensor (copy)", 8, nil, 0x04) -- Driver always sets this at the same time as reset_flag.sensor, firmware ignores this one
 
-sensor_reset_success = ProtoField.bool("goodix.sensor_reset_success", "Sensor reset success") -- False if a timeout occours getting a response from the sensor
+sensor_reset_success = ProtoField.bool("goodix.sensor_reset_success", "Sensor reset success") -- False if a timeout occurs getting a response from the sensor
 sensor_reset_number = ProtoField.uint16("goodix.sensor_reset_number", "Sensor reset number") -- Contents unknown, but it's a LE short sent if the sensor reset succeeds
 
 reg_multiple = ProtoField.bool("goodix.reg.multiple", "Multiple addresses") -- Only false is used by driver, no dissection implemented for true
 reg_address = ProtoField.uint16("goodix.reg.addr", "Base Address", base.HEX)
 reg_len = ProtoField.uint8("goodix.reg.len", "Length")
 
-pwrdown_scan_freq = ProtoField.uint16("goodix.powerdown_scan_frequency", "Powerdown Scan Frequecy")
+pwrdown_scan_freq = ProtoField.uint16("goodix.powerdown_scan_frequency", "Powerdown Scan Frequency")
 
 config_sensor_chip = ProtoField.uint8("goodix.config_sensor_chip", "Sensor Chip", base.RANGE_STRING, {
                                          {0, 0, "GF3208"},
@@ -72,7 +72,7 @@ commands = {
          name = "nop",
          dissect_command = function(tree, buf)
             -- This packet has a fixed, non-standard checksum of 0x88
-            -- Its purpose is unknown -- REd firmware does nothing when it recieves one.
+            -- Its purpose is unknown -- REd firmware does nothing when it receives one.
          end,
       }
    },
@@ -123,7 +123,7 @@ commands = {
       [2] = {
          name = "Set Powerdown Scan Frequency",
          dissect_command = function(tree, buf)
-            -- I believe this is for a feature (POV/persistance of vision) where the sensor continues scanning while the laptop is asleep, and sends it to the laptop once it wakes up
+            -- I believe this is for a feature (POV/persistence of vision) where the sensor continues scanning while the laptop is asleep, and sends it to the laptop once it wakes up
             tree:add_le(pwrdown_scan_freq, buf(0, 2)) -- Units unknown, though mine is 100, so ms would make sense?
          end,
          dissect_reply = function(tree, buf)
@@ -174,7 +174,7 @@ commands = {
       [7] = {
          name = "Query MCU State",
          dissect_command = function(tree, buf)
-            -- TODO what's the the 0x55
+            -- TODO what's the 0x55
          end,
          dissect_reply = function(tree, buf)
             tree:add_le(mcu_state_image, buf(0, 1))
