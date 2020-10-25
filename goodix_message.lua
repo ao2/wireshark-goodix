@@ -279,7 +279,8 @@ function protocol.dissector(buffer, pinfo, tree)
 end
 
 DissectorTable.get("tls.port"):add(1, protocol)
-DissectorTable.get("tls.port"):add(1, protocol)
+DissectorTable.get("usb.product"):add(0x27c65385, protocol)
+DissectorTable.get("usb.product"):add(0x27c65042, protocol)
 
 DissectorTable.get("usb.protocol"):add_for_decode_as(protocol)
 DissectorTable.get("usb.product"):add_for_decode_as(protocol)

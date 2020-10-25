@@ -37,3 +37,10 @@ function protocol.dissector(buffer, pinfo, tree)
 end
 
 DissectorTable.get("udp.port"):add(1, protocol)
+DissectorTable.get("usb.product"):add(0x27c6530c, protocol)
+DissectorTable.get("usb.product"):add(0x27c6538c, protocol)
+DissectorTable.get("usb.product"):add(0x27c65584, protocol)
+
+DissectorTable.get("usb.protocol"):add_for_decode_as(protocol)
+DissectorTable.get("usb.product"):add_for_decode_as(protocol)
+DissectorTable.get("usb.device"):add_for_decode_as(protocol)
