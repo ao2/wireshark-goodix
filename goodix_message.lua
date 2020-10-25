@@ -237,12 +237,19 @@ commands = {
             -- No args, no reply.
          end,
       },
-      [0xE] = {
-         category_name = "PROD",
+   },
+   [0xE] = {
+      category_name = "PROD",
+      [2] = {
+         name = "SGX?",
+         dissect_command = function(tree, buf)
+         end,
+         dissect_reply = function(tree, buf)
+         end,
       },
-      [0xF] = {
-         category_name = "UPFW",
-      },
+   },
+   [0xF] = {
+      category_name = "UPFW",
    }
 }
 
